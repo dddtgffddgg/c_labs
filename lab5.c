@@ -1,39 +1,43 @@
-# include <stdio.h>
+#include <stdio.h>
 
-int rec (int x, int y)
+float rec(float x, float y)
 {
     if (y == 1)
         return x;
+    else if (y == 0)
+        return 0;
     else
     {
         y -= 1;
-        return x + rec (x, y);
+        return x + rec(x, y);
     }
 }
 
-int cyc (int a, int b)
+float cyc(float a, float b)
 {
-    int S, d;
+    if (a == 0 || b == 0)
+        return 0;
+    float S, d;
 
     S = 0;
-    for (d = 1; d <= b; d ++)
+    for (d = 1; d <= b; d++)
         S += a;
 
     return S;
 }
 
-int main ()
+int main()
 {
-    int a, b;
+    float a, b;
 
-    printf ("Enter a: ");
-    scanf ("%d", & a);
+    printf("Enter a: ");
+    scanf("%f", &a);
 
-    printf ("Enter b: ");
-    scanf ("%d", & b);
+    printf("Enter b: ");
+    scanf("%f", &b);
 
-    printf ("Recursion  : %i\n", rec (a, b));
-    printf ("Cycle: %i\n", cyc (a, b));
+    printf("Recursion  : %f\n", rec(a, b));
+    printf("Cycle: %f\n", cyc(a, b));
 
     return 0;
 }
