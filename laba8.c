@@ -1,43 +1,171 @@
 #include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
 #include <ctype.h>
-#include <conio.h>
+#include <stdio_ext.h>
 
-int main ()
+int mygetch()
 {
-int c;
+ struct termios oldt, newt;
+ int c;
+ tcgetattr(STDIN_FILENO, &oldt);
+ newt = oldt;
+ newt.c_lflag &= ~(ICANON | ECHO);
+ tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+ c = getchar();
+ tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+ return c;
+}
 
-    while (1)
+enum reading
 {
-    c = getch();
-    if (c == 27)
-    continue;
-    if (c == 0)
+ before_entering,
+ first,
+ second,
+ first_symbol_second,
+ first_symbol_exponent,
+ exponent,
+ control
+};
+
+void printAtbashCipherResult(char symbol)
 {
-    c = getch ();
-    if (c >= 59 && c <= 65 || c == 67 || c == 68)
+ if (islower(symbol))
+ {
+ printf("%c", 'z' + 'a' - symbol);
+ }
+ if (isupper(symbol))
+ {
+ printf("%c", 'Z' + 'A' - symbol);
+ }
+}
+
+int main()
 {
-    continue;
-}
-    if (c == 66)
-    break;
-}
-    if (c == 224)
-{
-    c = getch ();
-    if (c == 133 || c == 134)
-{
-    continue;
-}
-    if (c >= 80 && c <= 83)
-{
-    continue;
-}
-    if (c >= 71 && c <= 73 || c == 75 || c == 77 || c == 79)
-{
-    continue;
-}
-}
-    printf ("%c", toupper (c));
-}
-    return 0;
+ char sym_valid = 1;
+ char count = 0;
+ char ctrl_1;
+ char ctrl_2;
+ enum reading mode = before_entering;
+ enum reading old_mode;
+
+ while (1)
+ {
+ char a = mygetch();
+
+ if (a == 0x1b)
+ {
+ count = 0;
+ old_mode = mode;
+ mode = control;
+ continue;
+ }
+
+ if (isprint(a) && mode != control)
+ {
+ printAtbashCipherResult(a);
+ }
+
+ if (mode == control)
+ {
+ if (count == 0)
+ {
+ ctrl_1 = a;
+ }
+
+ else
+ {
+ ctrl_2 = a;
+ __fpurge(stdin);
+ mode = old_mode;
+ if (ctrl_1 == 0x5b)
+ if (ctrl_2 == 0x48)
+ break;
+ continue;
+ }
+ count++;
+ }
+
+ if (!(isdigit(a) || a == '-' || a == '.' || a == 'e' || a == '+') && mode != control)
+ sym_valid = 0;
+
+ if (mode == before_entering)
+ {
+ if (!(isdigit(a) || a == '-' || a == '+'))
+ {
+ sym_valid = 0;
+ }
+
+ else
+ {
+ mode = first;
+ continue;
+ }
+ }
+
+ if (mode == first)
+ {
+ if (!(isdigit(a) || a == '.' || a == 'e' || a == '+'))
+ {
+ sym_valid = 0;
+ }
+
+ if (a == '.')
+ {
+ mode = first_symbol_second;
+ continue;
+ }
+
+ if (a == 'e')
+ {
+ mode = first_symbol_exponent;
+ continue;
+ }
+ }
+
+ if (mode == first_symbol_second)
+ {
+ if (!(isdigit(a)))
+ {
+ sym_valid = 0;
+ }
+
+ mode = second;
+ continue;
+ }
+
+ if (mode == second)
+ {
+ if (!(isdigit(a) || a == 'e'))
+ {
+ sym_valid = 0;
+ }
+
+ if (a == 'e')
+ {
+ mode = first_symbol_exponent;
+ continue;
+ }
+ }
+
+ if (mode == first_symbol_exponent)
+ {
+ if (!(isdigit(a) || a == '-' || a == '+'))
+ {
+ sym_valid = 0;
+ }
+
+ mode = exponent;
+ continue;
+ }
+
+ if (mode == exponent)
+ {
+ if (!(isdigit(a)))
+ {
+ sym_valid = 0;
+ }
+ }
+ }
+ return 0;
 }
