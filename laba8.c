@@ -8,12 +8,12 @@ int c;
 
     while (1)
 {
-    c = mygetch();
+    c = getch();
     if (c == 27)
     continue;
     if (c == 0)
 {
-    c = mygetch ();
+    c = getch ();
     if (c >= 59 && c <= 65 || c == 67 || c == 68)
 {
     continue;
@@ -23,7 +23,7 @@ int c;
 }
     if (c == 224)
 {
-    c = mygetch ();
+    c = getch ();
     if (c == 133 || c == 134)
 {
     continue;
